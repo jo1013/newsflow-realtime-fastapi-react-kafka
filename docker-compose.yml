@@ -1,0 +1,155 @@
+version: '3'
+services:
+
+  mediastack_api_call:
+    container_name: mediastack_api_call
+    build: 
+      context: ./mediastack_api_call
+    env_file:
+      - .env
+    depends_on:
+      - kafka_service  # Kafka 서비스에 의존성 추가
+    networks:
+      - mynetwork
+    volumes:
+    - ./mediastack_api_call/app:/app
+
+  gnews_api_call:
+    container_name: gnews_api_call
+    build: 
+      context: ./gnews_api_call
+    env_file:
+      - .env
+    depends_on:
+      - kafka_service  # Kafka 서비스에 의존성 추가
+    networks:
+      - mynetwork
+    volumes:
+    - ./gnews_api_call/app:/app
+
+  news_api_call:
+    container_name: news_api_call
+    build: 
+      context: ./news_api_call
+    env_file:
+      - .env
+    depends_on:
+      - kafka_service  # Kafka 서비스에 의존성 추가
+    networks:
+      - mynetwork
+    volumes:
+    - ./news_api_call/app:/app
+
+
+
+  zookeeper_service:
+    container_name: zookeeper_service
+    image: ghcr.io/arm64-compat/confluentinc/cp-zookeeper:7.1.1 # m1용 이미지
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+    ports:
+      - "2181:2181"
+    networks:
+      - mynetwork
+
+  kafka_service:
+    container_name: kafka_service
+    build:
+      context: ./kafka_service
+    depends_on:
+      - zookeeper_service
+    ports:
+      - "9092:9092"
+    expose:
+      - '29092'
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper_service:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka_service:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: '1' # 일반적으로 3으로 설정
+      KAFKA_MIN_INSYNC_REPLICAS: '1'
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks:
+      - mynetwork
+
+  kafka_ui_service :
+
+    container_name: kafka_ui_service
+    build:
+      context: ./kafka_ui_service
+    ports:
+      - "8989:8080"
+    restart: always
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=news_real_time_kafka
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka_service:29092
+      - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper_service:2181
+    networks:
+      - mynetwork
+
+  consumer_service:
+      container_name: consumer_service
+      build:
+        context: ./consumer_service  # Kafka Consumer 코드가 있는 디렉토리
+      depends_on:
+        - kafka_service
+        - mongodb_service
+      networks:
+        - mynetwork
+      env_file:
+        - .env
+
+
+  mongodb_service:
+    container_name: mongodb_service
+    build:
+      context: ./mongodb_service
+    # ports:
+    #   - "27017:27017"
+    networks:
+      - mynetwork
+    env_file:
+      - .env
+    environment:
+      - MONGODB_ROOT_USERNAME=${MONGODB_ROOT_USERNAME}
+      - MONGODB_ROOT_PASSWORD=${MONGODB_ROOT_PASSWORD}
+      - MONGODB_DATABASE=${MONGODB_DATABASE}
+      - MONGODB_COLLECTION=${MONGODB_COLLECTION}
+    volumes:
+      - ./mongodb_service/mongodb_data:/data/db
+      - ./mongodb_service/init-mongo.sh:/docker-entrypoint-initdb.d/init-mongo.sh:ro
+
+
+  data_api_service:
+    container_name: data_api_service
+    build: ./data_api_service
+    ports:
+      - "8001:8000"
+    depends_on:
+      - mongodb_service
+    env_file:
+      - .env
+    networks:
+      - mynetwork
+
+  frontend_service:
+    container_name: frontend_service
+    build: ./frontend_service
+    ports:
+      - "3000:3000"
+    depends_on:
+      - data_api_service
+    env_file:
+      - .env
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork: 
+    name: kafka_ex_mynetwork
+# <!-- updated_at 필드를 도입하여 데이터가 갱신된 시각을 기록하는 것은 데이터의 신뢰성과 추적 가능성을 향상시키는 좋은 방법입니다. 당신이 설명한 아키텍처에서 updated_at 필드를 추가하는 최적의 위치는 FastAPI를 통해 MongoDB에 데이터를 적재하는 단계입니다. 이렇게 하면 데이터가 MongoDB에 저장되거나 갱신될 때마다 updated_at 필드를 현재 시간으로 설정하여 데이터의 최신 상태를 정확하게 반영할 수 있습니다. -->
