@@ -12,16 +12,32 @@ const api = axios.create({
   }
 });
 
-// 토큰 관련 에러를 처리하는 함수
-const handleTokenError = (error) => {
-  if (error.response && error.response.status === 401) {
-    console.log('토큰이 유효하지 않습니다. 로그아웃 처리합니다.');
-    localStorage.removeItem('jwt');
-    // 로그인 페이지로 리다이렉트
-    window.location.href = '/login';
+
+// 디버깅을 위한 인터셉터
+api.interceptors.request.use(request => {
+  console.log('Starting Request', JSON.stringify(request, null, 2))
+  return request
+})
+
+api.interceptors.response.use(response => {
+  console.log('Response:', JSON.stringify(response, null, 2))
+  return response
+})
+
+// 토큰을 포함시키는 인터셉터
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('jwt');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  throw error;
-};
+);
+
 
 // 토큰 갱신 함수 (백엔드에 해당 엔드포인트가 구현되어 있다고 가정)
 const refreshToken = async () => {
@@ -31,7 +47,7 @@ const refreshToken = async () => {
   }
   try {
     const response = await api.post('/refresh-token', { refreshToken });
-    const newToken = response.data.token;
+    const newToken = response.data.access_token;  // 수정: token -> access_token
     localStorage.setItem('jwt', newToken);
     return newToken;
   } catch (error) {
@@ -39,11 +55,12 @@ const refreshToken = async () => {
     throw error;
   }
 };
-const initializeSourcesMap = async () => {
-  // 데이터베이스에서 현재 구독 상태를 가져오는 함수
+
+export const initializeSourcesMap = async () => {
+  try {
   const subscribedSources = await fetchSubscribedSourcesFromDB();
-  
-  // Map을 생성하고 데이터베이스의 구독 상태로 초기화
+  const sources = await fetchNewsSourcesApi();
+
   const sourcesMap = new Map(
     sources.map(source => {
       const isSubscribed = subscribedSources.includes(source.source);
@@ -52,21 +69,22 @@ const initializeSourcesMap = async () => {
   );
   
   return sourcesMap;
+  } catch (error) {
+    console.error('Failed to initialize sources map:', error);
+    throw error;
+  }
 };
 
 
-useEffect(() => {
-  const loadSourcesMap = async () => {
-    const initialSourcesMap = await initializeSourcesMap();
-    setSubscribedNews(initialSourcesMap);
-  };
-  
-  loadSourcesMap();
-}, []);
+
+
 
 const apiRequest = async (method, url, data = null) => {
   const token = localStorage.getItem('jwt');
+  console.log('Current token:', token);  // 디버깅을 위한 로그 추가
+
   if (!token) {
+    console.error('No token found in localStorage');
     throw new Error('No token found');
   }
 
@@ -81,11 +99,13 @@ const apiRequest = async (method, url, data = null) => {
     });
     return response.data;
   } catch (error) {
+    console.error('API request failed:', error.response || error);  // 에러 로깅 개선
     if (error.response && error.response.status === 401) {
-      // 토큰 갱신 시도
+      console.log('Token expired, attempting to refresh...');
       try {
         const newToken = await refreshToken();
-        // 새 토큰으로 재시도
+        console.log('Token refreshed successfully. New token:', newToken);
+
         const retryResponse = await api({
           method,
           url,
@@ -96,24 +116,13 @@ const apiRequest = async (method, url, data = null) => {
         });
         return retryResponse.data;
       } catch (refreshError) {
-        handleTokenError(refreshError);
+        console.error('Token refresh failed:', refreshError);
+        localStorage.removeItem('jwt');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/login';
+        throw new Error('Authentication failed. Please log in again.');
       }
     }
-    handleTokenError(error);
-  }
-};
-
-
-export const fetchSubscribedNews = async (page) => {
-  try {
-    const data = await apiRequest('get', `/news?page=${page}&page_size=10`);
-    console.log('Subscribed news fetched:', data);
-    if (!Array.isArray(data)) {
-      throw new Error('Invalid response format');
-    }
-    return data;
-  } catch (error) {
-    console.error('Failed to fetch subscribed news:', error);
     throw error;
   }
 };
@@ -129,6 +138,8 @@ export const fetchNewsSourcesApi = async () => {
     throw error;
   }
 };
+
+
 
 
 export const fetchSubscribedNewsApi = async () => {
@@ -151,21 +162,19 @@ export const fetchSubscribedNewsApi = async () => {
 };
 
 
-export const toggleNewsSubscription = async (newsId, action) => {
+export const toggleNewsSubscriptionApi = async (newsId, action) => {
   try {
-    const token = localStorage.getItem('jwt');
-    if (!token) {
-      throw new Error('No token found');
-    }
-    const response = await api.patch(`/subscriptions/${newsId}?action=${action}`, null, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    console.log(`뉴스 ${action} 성공:`, response.data);
-    return response.data;
+    console.log(`Attempting to ${action} news source: ${newsId}`);  
+    const response = await apiRequest('patch', `/subscriptions/${newsId}?action=${action}`);
+    console.log(`News ${action} successful:`, response);
+    return response;
   } catch (error) {
-    console.error(`뉴스 ${action} 실패:`, error.response ? error.response.data : error.message);
-    throw error;
+    console.error(`News ${action} failed:`, error);
+    if (error.response) {
+      throw new Error(`${error.response.status}: ${error.response.data.detail || error.message}`);
+    } else {
+      throw error;
+    }
   }
 };
+

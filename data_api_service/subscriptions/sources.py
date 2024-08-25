@@ -1,11 +1,17 @@
+# data_api_service/subscriptions/sources.py
 from fastapi import APIRouter, Depends, HTTPException
 
-from users.models import get_current_user
+from users.models import UserModel
+
+
+
+user_model = UserModel()
+
 
 router = APIRouter()
 
 @router.get("/news_sources")
-async def get_news_sources(db=Depends(), current_user=Depends(get_current_user)):
+async def get_news_sources(db=Depends(), current_user=Depends(user_model.get_current_user)):
     logger.info(f"Attempting to fetch news sources for user: {current_user}")
     try:
         news_sources = await db.news_source_list.find().to_list(length=None)

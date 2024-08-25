@@ -1,130 +1,3 @@
-
-# Real-time News Feed System
-
-## Overview
-
-This project aims to build a system that collects, processes, and delivers news articles to users in real-time, leveraging Kafka for data streaming, Docker for containerization, and MongoDB for data storage.
-
-## System Components
-
-- **API Call Container**: Fetches data from external APIs and sends it to Kafka.
-- **Zookeeper Service**: Manages Kafka's state.
-- **Kafka Service**: Handles message streaming.
-- **Consumer Service**: Consumes data from Kafka and stores it in MongoDB.
-- **Data API Service**: Provides processed data to the frontend via FAST-API.
-- **Frontend Service**: Displays news data to users, built with React.
-- **MongoDB Service**: Stores data consumed from Kafka.
-
-## Features
-
-- **Real-time Data Collection**: Utilizes the MediaStack API for gathering news articles.
-- **Data Processing**: Involves data cleaning and categorization using Python or Spark.
-- **Scalable Architecture**: Utilizes a Kafka cluster to ensure system scalability.
-- **Security**: Implements security configurations for Kafka and databases.
-- **Monitoring**: Employs Kibana or Grafana for system monitoring.
-- **Subscription and Trending Features**: Allows users to subscribe to topics or view trending news based on user engagement.
-- **Search Functionality**: Enables users to search for news articles.
-
-## Setup Instructions
-
-### Prerequisites
-
-- Docker and Docker Compose installed.
-- An account and API key from [MediaStack](https://mediastack.com/).
-
-### Configuration
-
-1. **Environment Variables**: Create a `.env` file in the project root with essential configurations:
-
-    ```env
-    # Kafka
-    KAFKA_SERVER=kafka_service:29092
-
-    # MediaStack
-    MEDIASTACK_API_KEY=<your_mediastack_api_key>
-
-    # MongoDB
-    MONGODB_ROOT_USERNAME=admin
-    MONGODB_ROOT_PASSWORD=<your_mongodb_root_password>
-    MONGODB_DATABASE=news
-    MONGODB_URI=mongodb://admin:<your_mongodb_root_password>@mongodb_service:27017/news
-    ```
-
-2. **`.gitignore` Configuration**: Ensure sensitive files are excluded:
-
-    ```
-    .env
-    mongodb_service/mongodb_data/
-    *.log
-    ```
-
-### Running the System
-
-Execute the following command in your terminal to start all services:
-
-```bash
-docker-compose up
-```
-
-## MongoDB Setup
-
-### Initial Setup
-
-After initializing the MongoDB container, configure the database and user:
-
-```bash
-docker exec -it mongodb_service bash
-mongosh
-```
-
-Then in the MongoDB shell:
-
-```javascript
-use admin
-db.createUser({
-    user: "news_admin",
-    pwd: "myUserPassword",
-    roles: [{ role: "readWrite", db: "news" }]
-})
-db.createCollection("newsArticles")
-```
-
-### Understanding MongoDB Accounts
-
-- **Multiple Database Management**: On a single MongoDB server, each database can have its own set of users. In this project, we manage two databases: `user_data` and `news_data`. It's important to create separate user accounts for each database to enhance security and manage privileges efficiently.
-
-```bash
-use user_data
-db.createUser({
-    user: "user_admin",
-    pwd: "userPassword",
-    roles: [{ role: "readWrite", db: "user_data" }]
-})
-
-use news_data
-db.createUser({
-    user: "news_admin",
-    pwd: "newsPassword",
-    roles: [{ role: "readWrite", db: "news_data" }]
-})
-```
-
-## ARM64 Compatibility Note
-
-#### For M1 Mac users, ensure to use ARM64-compatible Docker images. For Kafka setup, refer to [ARM64 Compatible Confluent Platform](https://github.com/arm64-compat/confluent-platform).
-
-## Project Outcomes
-
-#### Participants will develop skills in real-time data processing, system architecture design, front-end development, and deployment strategies, gaining a comprehensive understanding of how to build and manage a real-time news feed system.
-
----------
----------
-
-
-아래는 프로젝트의 README 파일에 포함할 한국어 버전 내용입니다. 이는 실시간 뉴스 피드 시스템의 설치 지침과 MongoDB 설정에 대한 추가 설명을 포함합니다.
-
----
-
 # 실시간 뉴스 피드 시스템
 
 ## 개요
@@ -263,3 +136,125 @@ M1 Mac 사용자는 ARM64 호환 Docker 이미지를 사용해야 합니다. Kaf
 참여자들은 실시간 데이터 처리, 시스템 아키텍처 설계, 프론트엔드 개발, 배포 전략을 포함하여 실시간 뉴스 피드 시스템을 구축하고 관리하는 데 필요한 포괄적인 이해를 얻게 됩니다.
 
 ---
+
+---------
+---------
+
+# Real-time News Feed System
+
+## Overview
+
+This project aims to build a system that collects, processes, and delivers news articles to users in real-time, leveraging Kafka for data streaming, Docker for containerization, and MongoDB for data storage.
+
+## System Components
+
+- **API Call Container**: Fetches data from external APIs and sends it to Kafka.
+- **Zookeeper Service**: Manages Kafka's state.
+- **Kafka Service**: Handles message streaming.
+- **Consumer Service**: Consumes data from Kafka and stores it in MongoDB.
+- **Data API Service**: Provides processed data to the frontend via FAST-API.
+- **Frontend Service**: Displays news data to users, built with React.
+- **MongoDB Service**: Stores data consumed from Kafka.
+
+## Features
+
+- **Real-time Data Collection**: Utilizes the MediaStack API for gathering news articles.
+- **Data Processing**: Involves data cleaning and categorization using Python or Spark.
+- **Scalable Architecture**: Utilizes a Kafka cluster to ensure system scalability.
+- **Security**: Implements security configurations for Kafka and databases.
+- **Monitoring**: Employs Kibana or Grafana for system monitoring.
+- **Subscription and Trending Features**: Allows users to subscribe to topics or view trending news based on user engagement.
+- **Search Functionality**: Enables users to search for news articles.
+
+## Setup Instructions
+
+### Prerequisites
+
+- Docker and Docker Compose installed.
+- An account and API key from [MediaStack](https://mediastack.com/).
+
+### Configuration
+
+1. **Environment Variables**: Create a `.env` file in the project root with essential configurations:
+
+    ```env
+    # Kafka
+    KAFKA_SERVER=kafka_service:29092
+
+    # MediaStack
+    MEDIASTACK_API_KEY=<your_mediastack_api_key>
+
+    # MongoDB
+    MONGODB_ROOT_USERNAME=admin
+    MONGODB_ROOT_PASSWORD=<your_mongodb_root_password>
+    MONGODB_DATABASE=news
+    MONGODB_URI=mongodb://admin:<your_mongodb_root_password>@mongodb_service:27017/news
+    ```
+
+2. **`.gitignore` Configuration**: Ensure sensitive files are excluded:
+
+    ```
+    .env
+    mongodb_service/mongodb_data/
+    *.log
+    ```
+
+### Running the System
+
+Execute the following command in your terminal to start all services:
+
+```bash
+docker-compose up
+```
+
+## MongoDB Setup
+
+### Initial Setup
+
+After initializing the MongoDB container, configure the database and user:
+
+```bash
+docker exec -it mongodb_service bash
+mongosh
+```
+
+Then in the MongoDB shell:
+
+```javascript
+use admin
+db.createUser({
+    user: "news_admin",
+    pwd: "myUserPassword",
+    roles: [{ role: "readWrite", db: "news" }]
+})
+db.createCollection("newsArticles")
+```
+
+### Understanding MongoDB Accounts
+
+- **Multiple Database Management**: On a single MongoDB server, each database can have its own set of users. In this project, we manage two databases: `user_data` and `news_data`. It's important to create separate user accounts for each database to enhance security and manage privileges efficiently.
+
+```bash
+use user_data
+db.createUser({
+    user: "user_admin",
+    pwd: "userPassword",
+    roles: [{ role: "readWrite", db: "user_data" }]
+})
+
+use news_data
+db.createUser({
+    user: "news_admin",
+    pwd: "newsPassword",
+    roles: [{ role: "readWrite", db: "news_data" }]
+})
+```
+
+## ARM64 Compatibility Note
+
+#### For M1 Mac users, ensure to use ARM64-compatible Docker images. For Kafka setup, refer to [ARM64 Compatible Confluent Platform](https://github.com/arm64-compat/confluent-platform).
+
+## Project Outcomes
+
+#### Participants will develop skills in real-time data processing, system architecture design, front-end development, and deployment strategies, gaining a comprehensive understanding of how to build and manage a real-time news feed system.
+

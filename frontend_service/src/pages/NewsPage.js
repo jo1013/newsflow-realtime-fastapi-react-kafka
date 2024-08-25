@@ -4,9 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import NewsCard from '../components/NewsCard';
 import SearchPage from '../components/SearchPage';
 import { fetchNews } from '../api/newsApi';
-import { fetchSubscribedNews } from '../api/subscribedNewsApi';
+import { fetchSubscribedNewsApi } from '../api/subscribedNewsApi';
 import { Container, Typography, Tabs, Tab, Box, Grid, Button } from '@mui/material';
-
 // NewsPage 컴포넌트 정의
 function NewsPage() {
     // 상태 변수 정의
@@ -96,7 +95,7 @@ function NewsPage() {
         setLoading(true); // 로딩 상태 설정
         const loadSubscribedData = async () => {
             try {
-                const data = await fetchSubscribedNews(subscribedPage); // 구독 뉴스 데이터 가져오기
+                const data = await fetchSubscribedNewsApi(subscribedPage); // 구독 뉴스 데이터 가져오기
                 if (data && data.length > 0) {
                     // setSubscribedNews(prev => [...prev, ...data]); // 구독 뉴스 데이터 업데이트
                     setSubscribedNews(prev => (subscribedPage === 1 ? data : [...prev, ...data])); // 구독 뉴스 데이터 업데이트

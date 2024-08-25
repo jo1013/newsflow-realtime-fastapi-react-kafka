@@ -6,3 +6,4 @@ pydantic[email]
 pyjwt
 passlib
 python-multipart
+motor

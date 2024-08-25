@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid Diagram</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <div class="mermaid">
+        erDiagram
+        NEWS_DATA {
+            collection news
+            collection news_source_list
+            collection subscriptions_list
+        }
+        USER_DATA {
+            collection users
+            collection subscriptions
+            collection user_subscriptions
+            collection click_events
+        }
+        NEWS_DATA_NEWS {
+            ObjectId _id
+            String title
+            String description
+            String url
+            String image
+            DateTime published_at
+            String source
+            String content
+            String topic
+            ISODate created_at
+        }
+        NEWS_DATA_NEWS_SOURCE_LIST {
+            ObjectId _id
+            String source
+            Boolean active
+            ISODate created_at
+            ISODate updated_at
+        }
+        USER_DATA_USERS {
+            ObjectId _id
+            String email
+            Binary password
+            ISODate created_at
+            ISODate updated_at
+        }
+        USER_DATA_USER_SUBSCRIPTIONS {
+            ObjectId _id
+            ObjectId user_id
+            String news_source_id
+            Boolean is_subscribe
+            ISODate created_at
+            ISODate updated_at
+        }
+        USER_DATA_CLICK_EVENTS {
+            ObjectId _id
+            ObjectId user_id
+            ObjectId news_id
+            String event_type
+            ISODate timestamp
+            String additional_data
+        }
+
+        NEWS_DATA ||--o{ NEWS_DATA_NEWS : contains
+        NEWS_DATA ||--o{ NEWS_DATA_NEWS_SOURCE_LIST : contains
+        USER_DATA ||--o{ USER_DATA_USERS : contains
+        USER_DATA ||--o{ USER_DATA_USER_SUBSCRIPTIONS : contains
+        USER_DATA ||--o{ USER_DATA_CLICK_EVENTS : contains
+        USER_DATA_USERS ||--o{ USER_DATA_USER_SUBSCRIPTIONS : has
+        USER_DATA_USERS ||--o{ USER_DATA_CLICK_EVENTS : performs
+        NEWS_DATA_NEWS }|--|| NEWS_DATA_NEWS_SOURCE_LIST : belongs_to
+        NEWS_DATA_NEWS_SOURCE_LIST ||--o{ USER_DATA_USER_SUBSCRIPTIONS : subscribed_by
+        NEWS_DATA_NEWS ||--o{ USER_DATA_CLICK_EVENTS : clicked_on
+    
+    </div>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+</body>
+</html>

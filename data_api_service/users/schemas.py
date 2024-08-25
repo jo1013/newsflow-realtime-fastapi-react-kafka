@@ -51,3 +51,13 @@ class ClickEvent(BaseModel):
     news_id: str
     activity_type: str = "click"
     timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+
+class Subscription(BaseModel):
+    news_source_id: str
+
+class UserSubscriptions(BaseModel):
+    subscriptions: List[Subscription]
+
+class SubscriptionCheck(BaseModel):
+    is_subscribe: bool

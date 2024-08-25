@@ -1,2 +1,2 @@
-# users/__init__.py
+# subscriptions/__init__.py
 from .routes import router
