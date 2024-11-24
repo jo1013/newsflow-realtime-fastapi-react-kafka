@@ -19,7 +19,11 @@ RUN npm install jwt-decode
 
 RUN npm run build
 
+# 환경변수 설정 추가
+ENV HOST=0.0.0.0
+ENV PORT=3000
 
+EXPOSE 3000
 # 앱 소스 추가
 
 

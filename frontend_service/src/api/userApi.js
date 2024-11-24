@@ -2,7 +2,8 @@
 import axios from 'axios';
 
 // 사용자 관련 기능을 수행하는 서버의 기본 URL 설정
-const USER_API_ENDPOINT = 'http://sawyer.cloudns.be:8001/users';
+// const USER_API_ENDPOINT = 'http://210.96.118.168:8001/users';
+const USER_API_ENDPOINT = `http://${process.env.REACT_APP_API_URL}:8001/users`;
 
 
 

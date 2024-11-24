@@ -42,6 +42,9 @@ class Database:
 
     def get_user_subscription(self):
         return self.user_collection
+    
+    def get_users_subscriptions_collection(self):
+        return self.user_subscriptions_collection
 
     def get_subscriptions_collection(self):
         return self.subscriptions_collection

@@ -2,3 +2,4 @@
 mongodb_service/mongodb_data/
 *.log
 *.sql
+node_moudles/

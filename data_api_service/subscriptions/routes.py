@@ -26,7 +26,6 @@ async def toggle_subscription(
     logger.debug(f"Request headers: {request.headers}")
     
     try:
-        
         logger.info(f'{token}')
         user_id = decode_access_token(token)
         logger.info(f"Token decoded successfully. User ID: {user_id}")

@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // FastAPI 서버의 `/news` 엔드포인트를 가리키도록 API_ENDPOINT 업데이트
-const API_ENDPOINT = 'http://sawyer.cloudns.be:8001/news'; // 포트번호 확인 필요
 
+const API_ENDPOINT = `http://${process.env.REACT_APP_API_URL}:8001/news`;
 
 export const fetchNews = async (page = 1, page_size = 10) => {
   try {

@@ -10,9 +10,7 @@ from .schemas import SubscriptionCreate
 class SubscriptionModel:
 
     def __init__(self):
-        self.collection = db.get_subscriptions_collection()
-        self.news_collection = db.get_news_collection()
-        self.news_source_collection = db.get_subscriptions_list_collection()
+        self.news_subscriptions = db.get_users_subscriptions_collection()
 
     def object_id_to_str(self, item):
         if isinstance(item, list):
@@ -30,7 +28,7 @@ class SubscriptionModel:
         try:
             logging.info(f'Start fetching subscribed news for user: {user_id}')
             # Fetch subscribed news_ids for the user
-            subscribed_ids_cursor = list(self.collection.find({"user_id": ObjectId(user_id), "is_subscribe": True}))
+            subscribed_ids_cursor = list(self.news_subscriptions.find({"user_id": ObjectId(user_id), "is_subscribe": True}))
             subscribed_ids = self.object_id_to_str(subscribed_ids_cursor)
             logging.info(f'Subscribed IDs for user {user_id}: {subscribed_ids}')
 
@@ -42,19 +40,19 @@ class SubscriptionModel:
             logging.info(f'News IDs for user {user_id}: {news_ids}')
 
             # Fetch sources for the subscribed news_ids
-            news_sources_cursor = self.news_source_collection.find({"_id": {"$in": [ObjectId(news_id) for news_id in news_ids]}})
+            news_sources_cursor = self.news_subscriptions.find({"_id": {"$in": [ObjectId(news_id) for news_id in news_ids]}})
             news_sources = list(news_sources_cursor)
             news_sources = self.object_id_to_str(news_sources)
             sources = [news_source['source'] for news_source in news_sources]
             logging.info(f'Sources for user {user_id}: {sources}')
 
             # Fetch news articles matching the subscribed sources
-            news_cursor = self.news_collection.find({"source": {"$in": sources}}).sort("published_at", DESCENDING).skip(skip).limit(limit)
+            news_cursor = self.news_subscriptions.find({"source": {"$in": sources}}).sort("published_at", DESCENDING).skip(skip).limit(limit)
             news_list = list(news_cursor)
             news_list = self.object_id_to_str(news_list)
             logging.info(f'Fetched news articles for user {user_id}: {news_list}')
 
-            total_items = self.news_collection.count_documents({"source": {"$in": sources}})
+            total_items = self.news_subscriptions.count_documents({"source": {"$in": sources}})
             logging.info(f'Total news articles count for user {user_id}: {total_items}')
 
             return news_list, total_items
@@ -72,7 +70,7 @@ class SubscriptionModel:
             "is_subscribe": True  # 구독 상태가 활성화된 뉴스만 조회
         }
         subscriptions = list(
-            self.collection.find(query).sort(sort_field, sort_order)
+            self.news_subscriptions.find(query).sort(sort_field, sort_order)
         )
         subscriptions = self.object_id_to_str(subscriptions)
         return [
@@ -87,7 +85,7 @@ class SubscriptionModel:
         ]
 
     def toggle_subscription(self, subscription_id, is_subscribe):
-        update_result = self.collection.update_one(
+        update_result = self.news_subscriptions.update_one(
             {"_id": ObjectId(subscription_id)},
             {"$set": {"is_subscribe": is_subscribe, "updated_at": datetime.utcnow()}}
         )
@@ -98,7 +96,7 @@ class SubscriptionModel:
             query['_id'] = ObjectId(query['_id'])
         if 'user_id' in query:
             query['user_id'] = ObjectId(query['user_id'])        
-        sub = self.collection.find_one(query)
+        sub = self.news_subscriptions.find_one(query)
         if sub:
             sub = self.object_id_to_str(sub)
             return {
@@ -115,21 +113,5 @@ class SubscriptionModel:
         new_subscription = subscription_data.dict()
         new_subscription["created_at"] = new_subscription["updated_at"] = datetime.utcnow()
         new_subscription["user_id"] = ObjectId(new_subscription["user_id"])
-        new_subscription_id = self.collection.insert_one(new_subscription).inserted_id
+        new_subscription_id = self.news_subscriptions.insert_one(new_subscription).inserted_id
         return to_str_id(new_subscription_id)
-    
-    # def get_news_sources(self):
-    #     try:
-    #         # news 컬렉션에서 source 필드의 고유한 값들을 가져옵니다.
-    #         sources = self.news_collection.distinct("source")
-            
-    #         # 결과를 원하는 형식으로 변환합니다.
-    #         result = [{"source": source} for source in sources]
-            
-    #         # 결과 로깅
-    #         logging.info(f"Retrieved {len(result)} unique news sources")
-            
-    #         return result
-    #     except Exception as e:
-    #         logging.error(f"Error retrieving news sources: {str(e)}")
-    #         raise
