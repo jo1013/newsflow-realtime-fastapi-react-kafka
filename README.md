@@ -258,3 +258,68 @@ db.createUser({
 
 #### Participants will develop skills in real-time data processing, system architecture design, front-end development, and deployment strategies, gaining a comprehensive understanding of how to build and manage a real-time news feed system.
 
+
+## 시스템 아키텍처
+
+```mermaid
+flowchart LR
+    subgraph External["External News APIs"]
+        M[MediaStack API]
+        G[GNews API]
+        N[News API]
+    end
+
+    subgraph Producers["API Call Services"]
+        MS[MediaStack Service]
+        GN[GNews Service]
+        NS[News Service]
+    end
+
+    subgraph MessageBroker["Message Broker"]
+        ZK[Zookeeper]
+        K[Kafka]
+        KU[Kafka UI]
+    end
+
+    subgraph Storage["Data Storage"]
+        C[Consumer Service]
+        MD[(MongoDB)]
+    end
+
+    subgraph Backend["Backend Services"]
+        API[FastAPI Service]
+    end
+
+    subgraph Frontend["User Interface"]
+        R[React Frontend]
+    end
+
+    M --> MS
+    G --> GN
+    N --> NS
+    
+    MS --> K
+    GN --> K
+    NS --> K
+    
+    ZK <--> K
+    K <--> KU
+    
+    K --> C
+    C --> MD
+    MD --> API
+    API --> R
+
+    classDef external fill:#f9f,stroke:#333,stroke-width:2px
+    classDef producer fill:#bbf,stroke:#333,stroke-width:2px
+    classDef broker fill:#bfb,stroke:#333,stroke-width:2px
+    classDef storage fill:#fbb,stroke:#333,stroke-width:2px
+    classDef backend fill:#fbf,stroke:#333,stroke-width:2px
+    classDef frontend fill:#bff,stroke:#333,stroke-width:2px
+
+    class M,G,N external
+    class MS,GN,NS producer
+    class ZK,K,KU broker
+    class C,MD storage
+    class API backend
+    class R frontend
